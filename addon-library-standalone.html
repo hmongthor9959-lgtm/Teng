@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+
+<title>คลังแอดออน</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=Prompt:wght@400;500;600&display=swap">
+<style id="app-style">
+/* Layout: grass-topped hero, one column; search + category chips, then a card grid of add-ons, install steps, footer. The page's owner gets a + button and a form sheet. Hard pixel edges, no rounding. */
+:root{
+  --bg:#f0f2e9; --surface:#ffffff; --fg:#1d2a1a; --muted:#566252; --line:#cdd5c0;
+  --accent:#3b8c2c; --accent-fg:#ffffff; --accent-ink:#2a6a1e;
+  --dirt:#7d5230; --hero-bg:#e3ead5; --shadow:#bfc9b0; --danger:#b3261e;
+  --font-display:"Pixelify Sans","Prompt",system-ui,sans-serif;
+  --font-body:"Prompt",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#131811; --surface:#1c241a; --fg:#e6eee1; --muted:#98a692; --line:#2f3a2c;
+    --accent:#6cc455; --accent-fg:#0e1a0b; --accent-ink:#90dc7b;
+    --dirt:#a87a52; --hero-bg:#1a2417; --shadow:#0b0f0a; --danger:#ff8a80; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#131811; --surface:#1c241a; --fg:#e6eee1; --muted:#98a692; --line:#2f3a2c;
+  --accent:#6cc455; --accent-fg:#0e1a0b; --accent-ink:#90dc7b;
+  --dirt:#a87a52; --hero-bg:#1a2417; --shadow:#0b0f0a; --danger:#ff8a80; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:16px;line-height:1.6}
+h1,h2,h3{font-family:var(--font-display);line-height:1.15;margin:0;text-wrap:balance}
+p{margin:0}
+.wrap{max-width:960px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+/* hero */
+.hero{background:var(--hero-bg);margin-top:calc(-1 * env(safe-area-inset-top,0px));border-bottom:3px solid var(--line)}
+.grass{height:16px;background:
+  linear-gradient(90deg,var(--accent) 0 100%) 0 0/100% 10px no-repeat,
+  repeating-linear-gradient(90deg,var(--accent) 0 16px,var(--accent-ink) 16px 32px) 0 10px/100% 6px no-repeat,
+  var(--dirt)}
+.hero .wrap{padding-top:calc(env(safe-area-inset-top,0px) + 28px);padding-bottom:36px;display:grid;gap:14px}
+.eyebrow{font-family:var(--font-display);font-size:.85rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent-ink)}
+.hero h1{font-size:clamp(1.9rem,6.5vw,3.2rem);font-weight:700}
+.hero p{max-width:34em;color:var(--muted)}
+
+/* controls */
+.tools{padding-block:24px 8px;display:grid;gap:14px}
+.search{width:100%;font:inherit;padding:12px 14px;border:3px solid var(--line);background:var(--surface);color:var(--fg);box-shadow:4px 4px 0 var(--shadow)}
+.search:focus-visible,.sheet input:focus-visible,.sheet textarea:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font:inherit;font-size:.9rem;padding:6px 12px;border:2px solid var(--line);background:var(--surface);color:var(--fg);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent-ink);color:var(--accent-fg)}
+.chip:focus-visible,.btn:focus-visible,.ghost:focus-visible,.fab:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.count{color:var(--muted);font-size:.9rem}
+
+/* grid */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,270px),1fr));gap:18px;padding-block:12px 40px}
+.card{background:var(--surface);border:3px solid var(--line);box-shadow:5px 5px 0 var(--shadow);padding:16px;display:grid;gap:12px;align-content:start;min-width:0}
+.top{display:flex;gap:14px;align-items:center;min-width:0}
+.icon{flex:none;width:64px;height:64px;border:2px solid var(--line);image-rendering:pixelated}
+.top h3{font-size:1.15rem;overflow-wrap:anywhere}
+.meta{display:flex;flex-wrap:wrap;gap:6px;font-size:.78rem;color:var(--muted)}
+.meta span{border:1px solid var(--line);padding:1px 7px}
+.card p{color:var(--muted);font-size:.93rem;overflow-wrap:anywhere}
+.btn{display:block;text-align:center;text-decoration:none;font:inherit;font-weight:600;font-size:.95rem;padding:10px 14px;border:3px solid var(--accent-ink);background:var(--accent);color:var(--accent-fg);cursor:pointer;box-shadow:3px 3px 0 var(--accent-ink)}
+.btn:active{transform:translate(3px,3px);box-shadow:none}
+.btn[aria-disabled="true"]{opacity:.5;cursor:default;box-shadow:none}
+.ghost{font:inherit;font-size:.85rem;padding:5px 12px;border:2px solid var(--line);background:var(--surface);color:var(--fg);cursor:pointer}
+.ghost.warn{border-color:var(--danger);color:var(--danger)}
+.card-actions{display:flex;gap:8px;border-top:2px dashed var(--line);padding-top:10px}
+.empty{grid-column:1/-1;border:3px dashed var(--line);padding:28px;text-align:center;color:var(--muted);display:grid;gap:6px}
+.empty b{color:var(--fg);font-weight:600}
+
+/* install */
+.install{background:var(--surface);border-block:3px solid var(--line)}
+.install .wrap{padding-block:36px;display:grid;gap:18px}
+.install h2,.faq h2{font-size:1.6rem}
+.steps{margin:0;padding:0;list-style:none;display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));counter-reset:s}
+.steps li{counter-increment:s;border:2px solid var(--line);padding:14px;display:grid;gap:6px;background:var(--bg)}
+.steps li::before{content:counter(s);font-family:var(--font-display);font-weight:700;font-size:1.4rem;color:var(--accent-ink)}
+.steps b{font-weight:600}
+.steps span{color:var(--muted);font-size:.92rem}
+.faq .wrap{padding-block:36px;display:grid;gap:12px}
+details{border:2px solid var(--line);background:var(--surface);padding:12px 14px}
+summary{cursor:pointer;font-weight:500}
+details p{margin-top:8px;color:var(--muted);font-size:.93rem}
+
+footer .wrap{padding-block:28px 96px;display:grid;gap:8px;color:var(--muted);font-size:.85rem}
+footer strong{color:var(--fg);font-weight:600}
+
+/* owner: + button and form sheet */
+.fab{position:fixed;z-index:30;right:calc(16px + env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));width:60px;height:60px;display:grid;place-items:center;font-family:var(--font-display);font-size:2.2rem;font-weight:700;line-height:1;padding:0 0 4px;border:3px solid var(--accent-ink);background:var(--accent);color:var(--accent-fg);cursor:pointer;box-shadow:4px 4px 0 var(--accent-ink)}
+.export{position:fixed;z-index:30;left:max(16px,env(safe-area-inset-left,0px));bottom:calc(28px + env(safe-area-inset-bottom,0px));max-width:calc(100vw - 110px - env(safe-area-inset-left,0px));box-shadow:3px 3px 0 var(--shadow);padding:8px 12px}
+.fab:active{transform:translate(4px,4px);box-shadow:none}
+.modal{position:fixed;inset:0;z-index:40;background:rgba(10,14,9,.6);display:flex;align-items:flex-end;justify-content:center}
+.sheet{width:100%;max-width:520px;max-height:92dvh;overflow-y:auto;background:var(--surface);border:3px solid var(--line);border-bottom:0;padding:20px max(16px,env(safe-area-inset-right,0px)) calc(20px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));display:grid;gap:12px}
+@media (min-width:600px){.modal{align-items:center}.sheet{border-bottom:3px solid var(--line);box-shadow:6px 6px 0 var(--shadow)}}
+.sheet h2{font-size:1.4rem}
+.sheet label{font-weight:500;font-size:.9rem;display:block;margin-bottom:4px}
+.sheet input,.sheet textarea{width:100%;font:inherit;font-size:16px;padding:10px 12px;border:2px solid var(--line);background:var(--bg);color:var(--fg);border-radius:0}
+.sheet textarea{resize:vertical}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.row>div{min-width:0}
+.err{color:var(--danger);font-size:.9rem}
+.actions{display:flex;gap:10px;justify-content:flex-end;align-items:center}
+.actions .btn{min-width:120px;border-width:3px}
+.actions button.btn:disabled{opacity:.6;cursor:default}
+
+.toast{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:center;padding:0 16px calc(env(safe-area-inset-bottom,0px) + 90px);pointer-events:none;z-index:50}
+.toast div{background:var(--fg);color:var(--bg);padding:10px 16px;font-size:.9rem;max-width:420px;border:2px solid var(--accent);opacity:0;transform:translateY(8px);transition:opacity .2s,transform .2s}
+.toast.show div{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){.toast div{transition:none}}
+</style>
+
+<div id="app">
+<header class="hero">
+  <div class="grass" aria-hidden="true"></div>
+  <div class="wrap">
+    <div class="eyebrow">Minecraft Add-ons</div>
+    <h1>แจกแอดออน Minecraft ดาวน์โหลดฟรี</h1>
+    <p>รวมแอดออนสำหรับ Minecraft Bedrock เลือกหมวดที่ชอบ กดดาวน์โหลด แล้วดูวิธีติดตั้งด้านล่างได้เลย</p>
+  </div>
+</header>
+
+<main>
+  <section class="wrap tools" id="tools" aria-label="ค้นหาแอดออน" hidden>
+    <input class="search" id="q" type="search" placeholder="ค้นหาแอดออน เช่น มังกร, เฟอร์นิเจอร์" aria-label="ค้นหาแอดออน" autocomplete="off">
+    <div class="chips" id="chips" role="group" aria-label="กรองตามหมวด"></div>
+    <div class="count" id="count" aria-live="polite"></div>
+  </section>
+
+  <section class="wrap">
+    <div class="grid" id="grid"></div>
+  </section>
+
+  <section class="install" id="install">
+    <div class="wrap">
+      <h2>วิธีติดตั้งแอดออน</h2>
+      <ol class="steps">
+        <li><b>ดาวน์โหลดไฟล์</b><span>ไฟล์จะเป็นนามสกุล .mcaddon หรือ .mcpack</span></li>
+        <li><b>เปิดไฟล์</b><span>แตะไฟล์ แล้วเลือกเปิดด้วย Minecraft เกมจะนำเข้าให้เอง</span></li>
+        <li><b>สร้างหรือแก้ไขโลก</b><span>ไปที่ Behavior Packs และ Resource Packs แล้วกดเปิดใช้งานแอดออนที่นำเข้า</span></li>
+        <li><b>เปิดฟีเจอร์ทดลอง</b><span>บางแอดออนต้องเปิด Experiments ในตั้งค่าโลกก่อนจึงจะทำงาน</span></li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="faq">
+    <div class="wrap">
+      <h2>คำถามที่พบบ่อย</h2>
+      <details><summary>แอดออนคืออะไร</summary><p>ไฟล์เสริมที่เพิ่มม็อบ ไอเทม บล็อก หรือหน้าตาใหม่ให้ Minecraft Bedrock Edition</p></details>
+      <details><summary>ใช้กับ Minecraft เวอร์ชันไหนได้บ้าง</summary><p>ดูเวอร์ชันที่ระบุบนการ์ดของแต่ละแอดออน แอดออนส่วนใหญ่ใช้กับ Bedrock Edition บนมือถือ คอมพิวเตอร์ และคอนโซล</p></details>
+      <details><summary>เปิดไฟล์แล้วไม่ขึ้นในเกมต้องทำอย่างไร</summary><p>ลองเปิดแอป Minecraft ค้างไว้ก่อน แล้วเปิดไฟล์อีกครั้ง หรือย้ายไฟล์ไปไว้ในโฟลเดอร์ที่เข้าถึงง่ายแล้วเปิดจากแอปจัดการไฟล์</p></details>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <strong>คลังแอดออน</strong>
+    <p>เว็บไซต์นี้เป็นเว็บแฟนเมด ไม่เกี่ยวข้องกับ Mojang Studios หรือ Microsoft Minecraft เป็นเครื่องหมายการค้าของเจ้าของ</p>
+  </div>
+</footer>
+
+<button class="ghost export" id="exportBtn" type="button" hidden></button>
+
+<button class="fab" id="fab" type="button" aria-label="เพิ่มแอดออน" title="เพิ่มแอดออน" hidden>+</button>
+
+<div class="modal" id="modal" hidden>
+  <form class="sheet" id="form" role="dialog" aria-modal="true" aria-labelledby="formTitle" novalidate>
+    <h2 id="formTitle">เพิ่มแอดออน</h2>
+    <div><label for="f-name">ชื่อแอดออน</label><input id="f-name" maxlength="80" autocomplete="off"></div>
+    <div><label for="f-cat">หมวด</label><input id="f-cat" list="cats" maxlength="30" placeholder="เลือกหรือพิมพ์หมวดใหม่" autocomplete="off"><datalist id="cats"></datalist></div>
+    <div class="row">
+      <div><label for="f-ver">Minecraft เวอร์ชัน</label><input id="f-ver" maxlength="20" placeholder="เช่น 1.21" autocomplete="off"></div>
+      <div><label for="f-size">ขนาดไฟล์</label><input id="f-size" maxlength="20" placeholder="เช่น 4.2 MB" autocomplete="off"></div>
+    </div>
+    <div><label for="f-desc">คำอธิบาย</label><textarea id="f-desc" rows="3" maxlength="300"></textarea></div>
+    <div><label for="f-url">ลิงก์ดาวน์โหลด</label><input id="f-url" type="url" inputmode="url" placeholder="https://..." autocomplete="off"></div>
+    <p class="err" id="f-err" role="alert" hidden></p>
+    <div class="actions">
+      <button type="button" class="ghost" id="f-cancel">ยกเลิก</button>
+      <button type="submit" class="btn" id="f-save">บันทึก</button>
+    </div>
+  </form>
+</div>
+
+<div class="toast" id="toast" role="status"><div id="toastMsg"></div></div>
+</div>
+
+<script type="application/json" id="addon-data">[]</script>
+<script id="app-script">
+const el = id => document.getElementById(id);
+const BASE = el("app").innerHTML;
+const ALL = "ทั้งหมด";
+const DEFAULT_CATS = ["ม็อบ", "อาวุธ", "ตกแต่ง", "เวทมนตร์", "ปรับปรุงเกม"];
+let state = [];
+try { state = JSON.parse(el("addon-data").textContent) || []; } catch (e) { state = []; }
+let cat = ALL, query = "", canEdit = false, editingId = null, busy = false, lastFocus = null, dirty = false;
+const DRAFT = "addon-library-draft", ADMIN = "addon-library-admin";
+
+/* ---------- helpers ---------- */
+function esc(t){ return String(t == null ? "" : t).replace(/[&<>"]/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m])); }
+function safeUrl(u){
+  try { const x = new URL(String(u).trim()); return (x.protocol === "https:" || x.protocol === "http:") ? x.href : ""; }
+  catch (e) { return ""; }
+}
+function newId(){ return (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2); }
+function hash(str){ let h = 2166136261; for (const ch of str) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
+function iconSvg(name){
+  let h = hash(name), hue = h % 360, rects = "";
+  const bg = `hsl(${hue} 35% 28%)`, c1 = `hsl(${hue} 65% 55%)`, c2 = `hsl(${(hue + 40) % 360} 70% 70%)`;
+  for (let y = 0; y < 8; y++) {
+    for (let x = 0; x < 4; x++) {
+      h = Math.imul(h ^ (x * 31 + y * 17 + 1), 2654435761) >>> 0;
+      const r = h % 5;
+      if (r < 2) continue;
+      const col = r === 4 ? c2 : c1;
+      rects += `<rect x="${x}" y="${y}" width="1" height="1" fill="${col}"/><rect x="${7 - x}" y="${y}" width="1" height="1" fill="${col}"/>`;
+    }
+  }
+  return `<svg class="icon" viewBox="0 0 8 8" aria-hidden="true" shape-rendering="crispEdges"><rect width="8" height="8" fill="${bg}"/>${rects}</svg>`;
+}
+let tt;
+function toast(m){
+  el("toastMsg").textContent = m; el("toast").classList.add("show");
+  clearTimeout(tt); tt = setTimeout(() => el("toast").classList.remove("show"), 3200);
+}
+
+/* ---------- saving: the page rebuilds itself from its own source plus the data ---------- */
+const RESET = ":root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}";
+const TOP = '<title>คลังแอดออน</title>\n<meta name="claude:viewport-fit-sides" content="cover">\n<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=Prompt:wght@400;500;600&display=swap">\n';
+function buildDoc(list){
+  const json = JSON.stringify(list).replace(/</g, "\\u003c").replace(/\u2028/g, "\\u2028").replace(/\u2029/g, "\\u2029");
+  return '<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>' + RESET + '</style></head><body>\n'
+    + TOP
+    + '<style id="app-style">' + el("app-style").textContent + '</style>\n'
+    + '<div id="app">' + BASE + '</div>\n'
+    + '<script type="application/json" id="addon-data">' + json + '<\/script>\n'
+    + '<script id="app-script">' + el("app-script").textContent + '<\/script>\n'
+    + '</body></html>';
+}
+function errText(e){
+  const c = e && e.code;
+  if (c === "conflict") return "มีการแก้ไขจากที่อื่นก่อนหน้านี้ หน้านี้กำลังโหลดใหม่ ลองทำอีกครั้ง";
+  if (c === "not_writer" || c === "not_granted" || c === "not_declared" || c === "consent_required") return "บัญชีนี้แก้ไขหน้านี้ไม่ได้";
+  if (c === "too_large") return "ข้อมูลใหญ่เกินไป ลองลบแอดออนเก่าบางอัน";
+  if (c === "rate_limited") return "บันทึกถี่เกินไป รอสักครู่แล้วลองใหม่";
+  return "บันทึกไม่สำเร็จ ลองใหม่อีกครั้ง";
+}
+async function commit(next){
+  state = next; dirty = true;
+  try { localStorage.setItem(DRAFT, JSON.stringify(next)); } catch (e) {}
+  render();
+}
+function exportFile(){
+  const blob = new Blob([buildDoc(state)], { type: "text/html" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = "index.html";
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  dirty = false; render();
+  toast("ดาวน์โหลด index.html แล้ว นำไปอัปโหลดทับไฟล์เดิมบนเว็บ");
+}
+
+/* ---------- render ---------- */
+function categories(){ return [ALL, ...new Set(state.map(a => a.c).filter(Boolean))]; }
+function render(){
+  const has = state.length > 0;
+  el("tools").hidden = !has;
+  if (cat !== ALL && !state.some(a => a.c === cat)) cat = ALL;
+  el("chips").innerHTML = categories().map(c => `<button class="chip" type="button" aria-pressed="${c === cat}" data-c="${esc(c)}">${esc(c === ALL ? ALL : c)}</button>`).join("");
+  const q = query.trim().toLowerCase();
+  const list = state.filter(a => (cat === ALL || a.c === cat) && (!q || [a.n, a.d, a.c].join(" ").toLowerCase().includes(q)));
+  el("count").textContent = `พบ ${list.length} แอดออน`;
+  let html;
+  if (!has) {
+    html = canEdit
+      ? `<div class="empty"><b>ยังไม่มีแอดออน</b><span>กดปุ่ม + มุมขวาล่างเพื่อเพิ่มแอดออนอันแรก</span></div>`
+      : `<div class="empty"><b>ยังไม่มีแอดออนให้ดาวน์โหลด</b><span>กลับมาดูใหม่เร็วๆ นี้</span></div>`;
+  } else if (!list.length) {
+    html = `<div class="empty"><span>ไม่พบแอดออนที่ตรงกับคำค้นหา ลองเปลี่ยนคำหรือเลือกหมวดอื่น</span></div>`;
+  } else {
+    html = list.map(a => {
+      const url = safeUrl(a.u);
+      const meta = [a.c, a.v ? "Minecraft " + a.v : "", a.s].filter(Boolean).map(m => `<span>${esc(m)}</span>`).join("");
+      const dl = url
+        ? `<a class="btn" href="${esc(url)}" target="_blank" rel="noopener noreferrer">ดาวน์โหลด</a>`
+        : `<span class="btn" aria-disabled="true">ยังไม่มีลิงก์</span>`;
+      const admin = canEdit
+        ? `<div class="card-actions"><button class="ghost" type="button" data-edit="${esc(a.id)}">แก้ไข</button><button class="ghost warn" type="button" data-del="${esc(a.id)}">ลบ</button></div>`
+        : "";
+      return `<article class="card"><div class="top">${iconSvg(a.n)}<div><h3>${esc(a.n)}</h3></div></div><div class="meta">${meta}</div>${a.d ? `<p>${esc(a.d)}</p>` : ""}${dl}${admin}</article>`;
+    }).join("");
+  }
+  el("grid").innerHTML = html;
+  el("fab").hidden = !canEdit;
+  el("exportBtn").hidden = !canEdit;
+  el("exportBtn").textContent = dirty ? "ส่งออกไฟล์ (มีการแก้ไขที่ยังไม่ได้ส่งออก)" : "ส่งออกไฟล์ index.html";
+}
+
+/* ---------- form ---------- */
+function showErr(m){ const p = el("f-err"); p.textContent = m || ""; p.hidden = !m; }
+function setBusy(b){ busy = b; const s = el("f-save"); s.disabled = b; s.textContent = b ? "กำลังบันทึก..." : "บันทึก"; el("f-cancel").disabled = b; }
+function openForm(id){
+  editingId = id || null;
+  const a = state.find(x => x.id === id) || {};
+  el("formTitle").textContent = id ? "แก้ไขแอดออน" : "เพิ่มแอดออน";
+  el("f-name").value = a.n || ""; el("f-cat").value = a.c || ""; el("f-ver").value = a.v || "";
+  el("f-size").value = a.s || ""; el("f-desc").value = a.d || ""; el("f-url").value = a.u || "";
+  const cats = [...new Set([...DEFAULT_CATS, ...state.map(x => x.c).filter(Boolean)])];
+  el("cats").innerHTML = cats.map(c => `<option value="${esc(c)}"></option>`).join("");
+  showErr(""); setBusy(false);
+  lastFocus = document.activeElement;
+  el("modal").hidden = false;
+  setTimeout(() => el("f-name").focus(), 0);
+}
+function closeForm(){
+  if (busy) return;
+  el("modal").hidden = true;
+  if (lastFocus && lastFocus.focus) { try { lastFocus.focus(); } catch (e) {} }
+}
+async function submitForm(ev){
+  ev.preventDefault();
+  if (busy) return;
+  const n = el("f-name").value.trim(), c = el("f-cat").value.trim(), u = safeUrl(el("f-url").value);
+  if (!n) { showErr("ใส่ชื่อแอดออนก่อน"); el("f-name").focus(); return; }
+  if (!c) { showErr("ใส่หมวดของแอดออน"); el("f-cat").focus(); return; }
+  if (!u) { showErr("ลิงก์ดาวน์โหลดต้องขึ้นต้นด้วย https:// หรือ http://"); el("f-url").focus(); return; }
+  const item = { id: editingId || newId(), n, c, v: el("f-ver").value.trim(), s: el("f-size").value.trim(), d: el("f-desc").value.trim(), u };
+  const next = editingId ? state.map(a => a.id === editingId ? item : a) : [item, ...state];
+  showErr(""); setBusy(true);
+  try {
+    await commit(next);
+    busy = false; el("modal").hidden = true;
+    toast(editingId ? "บันทึกการแก้ไขแล้ว" : "เพิ่มแอดออนแล้ว");
+  } catch (e) {
+    setBusy(false); showErr(errText(e));
+  }
+}
+
+/* ---------- events ---------- */
+el("chips").addEventListener("click", e => {
+  const b = e.target.closest("[data-c]"); if (!b) return;
+  cat = b.dataset.c; render();
+});
+el("q").addEventListener("input", e => { query = e.target.value; render(); });
+el("fab").addEventListener("click", () => openForm(null));
+el("exportBtn").addEventListener("click", exportFile);
+el("f-cancel").addEventListener("click", closeForm);
+el("form").addEventListener("submit", submitForm);
+el("modal").addEventListener("click", e => { if (e.target === el("modal")) closeForm(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape" && !el("modal").hidden) closeForm(); });
+let armed = null, armTimer;
+el("grid").addEventListener("click", async e => {
+  const ed = e.target.closest("[data-edit]");
+  if (ed) { openForm(ed.dataset.edit); return; }
+  const del = e.target.closest("[data-del]");
+  if (!del) return;
+  const id = del.dataset.del;
+  if (armed !== id) {
+    armed = id; del.textContent = "กดอีกครั้งเพื่อลบ";
+    clearTimeout(armTimer); armTimer = setTimeout(() => { armed = null; render(); }, 3000);
+    return;
+  }
+  armed = null; clearTimeout(armTimer);
+  try { await commit(state.filter(a => a.id !== id)); toast("ลบแอดออนแล้ว"); }
+  catch (err) { render(); toast(errText(err)); }
+});
+
+/* ---------- start: everyone sees the list; open the page with #admin to get the + button ---------- */
+try {
+  if (location.hash === "#admin") localStorage.setItem(ADMIN, "1");
+  if (location.hash === "#logout") localStorage.removeItem(ADMIN);
+  canEdit = localStorage.getItem(ADMIN) === "1" && location.hash !== "#logout";
+  if (canEdit) {
+    const d = JSON.parse(localStorage.getItem(DRAFT) || "null");
+    if (Array.isArray(d)) { state = d; dirty = true; }
+  }
+} catch (e) {}
+render();
+</script>
+
+
+</body></html>
