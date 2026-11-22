@@ -1,6 +1,4 @@
-<!doctype html>
-<html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
-
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>คลังแอดออน</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=Prompt:wght@400;500;600&display=swap">
@@ -125,7 +123,6 @@ footer strong{color:var(--fg);font-weight:600}
 .toast.show div{opacity:1;transform:none}
 @media (prefers-reduced-motion:reduce){.toast div{transition:none}}
 </style>
-
 <div id="app">
 <div class="bgfix" aria-hidden="true"></div>
 <header class="hero">
@@ -138,8 +135,8 @@ footer strong{color:var(--fg);font-weight:600}
 </header>
 
 <main>
-  <section class="wrap tools" id="tools" aria-label="ค้นหาแอดออน" hidden>
-    <input class="search" id="q" type="search" placeholder="ค้นหาแอดออน เช่น มังกร, เฟอร์นิเจอร์" aria-label="ค้นหาแอดออน" autocomplete="off">
+  <section class="wrap tools" id="tools" aria-label="ค้นหาแอดออน" hidden="">
+    <input class="search" id="q" type="search" placeholder="ค้นหาแอดออน เช่น มังกร, เฟอร์นิเจอร์" aria-label="ค้นหาแอดออน" autocomplete="off" __gcruniqueid="11">
     <div class="chips" id="chips" role="group" aria-label="กรองตามหมวด"></div>
     <div class="count" id="count" aria-live="polite"></div>
   </section>
@@ -177,19 +174,20 @@ footer strong{color:var(--fg);font-weight:600}
   </div>
 </footer>
 
-<button class="ghost export" id="exportBtn" type="button" hidden></button>
+<button class="ghost export" id="exportBtn" type="button" hidden=""></button>
 
-<button class="fab" id="fab" type="button" aria-label="เพิ่มแอดออน" title="เพิ่มแอดออน" hidden>+</button>
+<button class="fab" id="fab" type="button" aria-label="เพิ่มแอดออน" title="เพิ่มแอดออน" hidden="">+</button>
 
-<button class="ghost bulk" id="bulkBtn" type="button" hidden>เพิ่มหลายรายการพร้อมกัน</button>
+<button class="ghost bulk" id="bulkBtn" type="button" hidden="">เพิ่มหลายรายการพร้อมกัน</button>
 
-<div class="modal" id="bulkModal" hidden>
-  <form class="sheet" id="bulkForm" role="dialog" aria-modal="true" aria-labelledby="bulkTitle" novalidate>
+<div class="modal" id="bulkModal" hidden="">
+  <form class="sheet" id="bulkForm" role="dialog" aria-modal="true" aria-labelledby="bulkTitle" novalidate="" __gcruniqueid="1">
     <h2 id="bulkTitle">เพิ่มหลายรายการพร้อมกัน</h2>
     <p class="hint">วาง 1 แอดออนต่อ 1 บรรทัด รูปแบบ: ชื่อแอดออน แล้วตามด้วยลิงก์ เช่น<br>Item Physics | https://drive.google.com/...<br>ชื่อไฟล์ .mcaddon .mcpack ที่ติดมาด้วยจะถูกตัดออกให้</p>
-    <div><label for="b-cat">หมวด (ใช้กับทุกรายการ)</label><input id="b-cat" list="cats" maxlength="30" placeholder="เลือกหรือพิมพ์หมวด" autocomplete="off"></div>
-    <div><label for="b-text">รายการ</label><textarea id="b-text" rows="8" placeholder="Cinecam | https://...&#10;Death Animations | https://..."></textarea></div>
-    <p class="err" id="b-err" role="alert" hidden></p>
+    <div><label for="b-cat">หมวด (ใช้กับทุกรายการ)</label><input id="b-cat" list="cats" maxlength="30" placeholder="เลือกหรือพิมพ์หมวด" autocomplete="off" __gcruniqueid="2"></div>
+    <div><label for="b-text">รายการ</label><textarea id="b-text" rows="8" placeholder="Cinecam | https://...
+Death Animations | https://..." __gcruniqueid="3"></textarea></div>
+    <p class="err" id="b-err" role="alert" hidden=""></p>
     <div class="actions">
       <button type="button" class="ghost" id="b-cancel">ยกเลิก</button>
       <button type="submit" class="btn" id="b-save">เพิ่มทั้งหมด</button>
@@ -197,18 +195,18 @@ footer strong{color:var(--fg);font-weight:600}
   </form>
 </div>
 
-<div class="modal" id="modal" hidden>
-  <form class="sheet" id="form" role="dialog" aria-modal="true" aria-labelledby="formTitle" novalidate>
+<div class="modal" id="modal" hidden="">
+  <form class="sheet" id="form" role="dialog" aria-modal="true" aria-labelledby="formTitle" novalidate="" __gcruniqueid="4">
     <h2 id="formTitle">เพิ่มแอดออน</h2>
-    <div><label for="f-name">ชื่อแอดออน</label><input id="f-name" maxlength="80" autocomplete="off"></div>
-    <div><label for="f-cat">หมวด</label><input id="f-cat" list="cats" maxlength="30" placeholder="เลือกหรือพิมพ์หมวดใหม่" autocomplete="off"><datalist id="cats"></datalist></div>
+    <div><label for="f-name">ชื่อแอดออน</label><input id="f-name" maxlength="80" autocomplete="off" __gcruniqueid="5"></div>
+    <div><label for="f-cat">หมวด</label><input id="f-cat" list="cats" maxlength="30" placeholder="เลือกหรือพิมพ์หมวดใหม่" autocomplete="off" __gcruniqueid="6"><datalist id="cats"></datalist></div>
     <div class="row">
-      <div><label for="f-ver">Minecraft เวอร์ชัน</label><input id="f-ver" maxlength="20" placeholder="เช่น 1.21" autocomplete="off"></div>
-      <div><label for="f-size">ขนาดไฟล์</label><input id="f-size" maxlength="20" placeholder="เช่น 4.2 MB" autocomplete="off"></div>
+      <div><label for="f-ver">Minecraft เวอร์ชัน</label><input id="f-ver" maxlength="20" placeholder="เช่น 1.21" autocomplete="off" __gcruniqueid="7"></div>
+      <div><label for="f-size">ขนาดไฟล์</label><input id="f-size" maxlength="20" placeholder="เช่น 4.2 MB" autocomplete="off" __gcruniqueid="8"></div>
     </div>
-    <div><label for="f-desc">คำอธิบาย</label><textarea id="f-desc" rows="3" maxlength="300"></textarea></div>
-    <div><label for="f-url">ลิงก์ดาวน์โหลด</label><input id="f-url" type="url" inputmode="url" placeholder="https://..." autocomplete="off"></div>
-    <p class="err" id="f-err" role="alert" hidden></p>
+    <div><label for="f-desc">คำอธิบาย</label><textarea id="f-desc" rows="3" maxlength="300" __gcruniqueid="9"></textarea></div>
+    <div><label for="f-url">ลิงก์ดาวน์โหลด</label><input id="f-url" type="url" inputmode="url" placeholder="https://..." autocomplete="off" __gcruniqueid="10"></div>
+    <p class="err" id="f-err" role="alert" hidden=""></p>
     <div class="actions">
       <button type="button" class="ghost" id="f-cancel">ยกเลิก</button>
       <button type="submit" class="btn" id="f-save">บันทึก</button>
@@ -218,8 +216,7 @@ footer strong{color:var(--fg);font-weight:600}
 
 <div class="toast" id="toast" role="status"><div id="toastMsg"></div></div>
 </div>
-
-<script type="application/json" id="addon-data">[]</script>
+<script type="application/json" id="addon-data">[{"id":"deb9c556-04f8-4031-b065-bfe842bdfc45","n":"แอดออนตัดไม้ทีเดียว","c":"Mcaddon","v":"","s":"567kb","d":"ตัดไม้ทีเดียวต้นไม้ล้มทังต้น สามารถทำความสำเร็จได้(achievement on)","u":"https://drive.google.com/file/d/1zIK4cjWPZ2RNA136-1DfczHuwexK4mk6/view?usp=drivesdk"}]</script>
 <script id="app-script">
 const el = id => document.getElementById(id);
 const BASE = el("app").innerHTML;
@@ -458,6 +455,4 @@ try {
 } catch (e) {}
 render();
 </script>
-
-
 </body></html>
