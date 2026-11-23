@@ -863,8 +863,7 @@ render();
       [606,296.5,7,4, 146,106,64, 5.1,  3.0,.24],   // skeleton
       [622.5,297,7,4, 146,106,64, 5.1,  3.0,.24],
       [505,518,4,10,  120,147,18, 4.7,  2.4,.22],   // zombie horse
-      [346,560,5,4,   181,132,114, 3.9, 1.1,.22],   // diamond horse
-      [357,558,5,4,   181,132,114, 3.9, 1.1,.22]
+      [402.5,520.5,4,7.5, 232,228,226, 3.9, 1.1,.22]   // diamond horse eye
     ]}
     ];
     var reduce=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -990,6 +989,120 @@ render();
     (function loop(now){
       var t=(now-t0)/1000;
       for(var i=0;i<scenes.length;i++){ if(scenes[i].visible) scenes[i].draw(t); }
+      requestAnimationFrame(loop);
+    })(t0);
+  }catch(err){}
+})();
+</script>
+<script id="icon-script">
+/* Breathing + blinking for the add-on cover icon (the Minecraft picture on each card) */
+(function(){
+  try{
+    var app=document.getElementById("app-script"); if(!app) return;
+    var mm=/const DEFAULT_ICON = "(data:image\/jpeg;base64,[^"]+)"/.exec(app.textContent); if(!mm) return;
+    var SRC=mm[1], SZ=256;
+    var C=[
+      [160,175,60,80, 160,225, .09,1.40, 0.5,0],   // Steve
+      [100,190,42,60, 100,225, .09,1.25, 2.1,0],   // Alex
+      [106,128,30,24, 106,135, .10,1.80, 1.0,1.5], // flying villager
+      [58,200,26,32,  58,235,  .10,1.50, 3.0,0],   // creeper
+      [205,200,26,32, 205,220, .10,1.70, 4.0,2],   // allay
+      [222,175,18,16, 222,185, .12,2.00, 5.0,0],   // pig
+      [35,170,48,60,  35,235,  .05,1.10, 2.8,0]    // pink golem
+    ];
+    var E=[
+      [144,153.5,7,5, 192,131,86, 4.2, 0.4,.22],
+      [159.5,146,7,5, 201,138,94, 4.2, 0.4,.22],
+      [93,167,5.5,4.5, 211,142,87, 3.6, 1.7,.22],
+      [101.5,164.5,5.5,4.5, 218,158,79, 3.6, 1.7,.22],
+      [101.5,127.5,4,4, 185,117,76, 5.0, 2.9,.22],
+      [110.5,125.5,4,4, 185,116,76, 5.0, 2.9,.22]
+    ];
+    var N=C.length,M=E.length;
+    var u0=new Float32Array(N*4),u1=new Float32Array(N*4),u2=new Float32Array(N*4);
+    C.forEach(function(c,i){u0.set([c[0],c[1],c[2],c[3]],i*4);u1.set([c[4],c[5],c[6],c[7]],i*4);u2.set([c[8],c[9],0,0],i*4);});
+    var e0=new Float32Array(M*4),e1=new Float32Array(M*4),e2=new Float32Array(M*4);
+    E.forEach(function(c,i){e0.set([c[0],c[1],c[2],c[3]],i*4);e1.set([c[4]/255,c[5]/255,c[6]/255,c[7]],i*4);e2.set([c[8],c[9],0,0],i*4);});
+    var VS="attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}";
+    var FS=[
+      "precision highp float;",
+      "uniform sampler2D tex;uniform vec2 res;uniform float t;",
+      "uniform vec4 U0["+N+"],U1["+N+"],U2["+N+"],E0["+M+"],E1["+M+"],E2["+M+"];",
+      "void main(){",
+      "  vec2 p=vec2(gl_FragCoord.x,res.y-gl_FragCoord.y); vec2 q=p;",
+      "  for(int i=0;i<"+N+";i++){",
+      "    vec4 a=U0[i],b=U1[i],c=U2[i];",
+      "    float w=1.-smoothstep(0.,1.,length((p-a.xy)/a.zw));",
+      "    float ph=t*b.w+c.x;",
+      "    float k=b.z*(sin(ph)+.25*sin(2.*ph+1.));",
+      "    q-=(p-b.xy)*vec2(k*.35,k)*w;",
+      "    q.y-=c.y*sin(ph*.7+1.7)*w;",
+      "  }",
+      "  vec4 col=texture2D(tex,clamp(q/res,0.,1.));",
+      "  for(int j=0;j<"+M+";j++){",
+      "    vec4 a=E0[j],b=E1[j],c=E2[j];",
+      "    float ph=mod(t+c.x,b.w);",
+      "    float cl=smoothstep(0.,.04,ph)*(1.-smoothstep(c.y-.06,c.y,ph))*step(ph,c.y);",
+      "    vec2 e=abs(q-a.xy)/a.zw;",
+      "    float mk=1.-smoothstep(.8,1.1,max(e.x,e.y));",
+      "    col.rgb=mix(col.rgb,b.xyz,mk*cl);",
+      "  }",
+      "  gl_FragColor=col;",
+      "}"
+    ].join("\n");
+    var off=document.createElement("canvas"); off.width=off.height=SZ;
+    var gl=off.getContext("webgl",{antialias:false,alpha:false,preserveDrawingBuffer:true});
+    if(!gl) return;
+    var sh=function(type,src){var o=gl.createShader(type);gl.shaderSource(o,src);gl.compileShader(o);if(!gl.getShaderParameter(o,gl.COMPILE_STATUS))throw new Error(gl.getShaderInfoLog(o));return o;};
+    var pr=gl.createProgram();
+    gl.attachShader(pr,sh(gl.VERTEX_SHADER,VS)); gl.attachShader(pr,sh(gl.FRAGMENT_SHADER,FS));
+    gl.linkProgram(pr); if(!gl.getProgramParameter(pr,gl.LINK_STATUS)) return;
+    gl.useProgram(pr);
+    gl.bindBuffer(gl.ARRAY_BUFFER,gl.createBuffer());
+    gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
+    var loc=gl.getAttribLocation(pr,"p"); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
+    gl.viewport(0,0,SZ,SZ);
+    var U=function(n){return gl.getUniformLocation(pr,n);};
+    gl.uniform2f(U("res"),SZ,SZ); gl.uniform1i(U("tex"),0);
+    gl.uniform4fv(U("U0"),u0);gl.uniform4fv(U("U1"),u1);gl.uniform4fv(U("U2"),u2);
+    gl.uniform4fv(U("E0"),e0);gl.uniform4fv(U("E1"),e1);gl.uniform4fv(U("E2"),e2);
+    var uT=U("t"), ready=false;
+    var image=new Image();
+    image.onload=function(){
+      gl.bindTexture(gl.TEXTURE_2D,gl.createTexture());
+      gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,image);
+      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+      ready=true; swap();
+    };
+    image.src=SRC;
+    // swap the cover <img> on every card for a live canvas (cards are re-rendered when the list changes)
+    function swap(){
+      if(!ready) return;
+      var imgs=document.querySelectorAll("#grid img.icon");
+      for(var i=0;i<imgs.length;i++){
+        var im=imgs[i]; if(im.src!==SRC) continue;
+        var cv=document.createElement("canvas"), d=Math.min(window.devicePixelRatio||1,3);
+        cv.className="icon icon-anim"; cv.width=cv.height=Math.round(64*d);
+        cv.setAttribute("aria-hidden","true");
+        im.parentNode.replaceChild(cv,im);
+      }
+    }
+    var g=document.getElementById("grid");
+    if(g&&window.MutationObserver) new MutationObserver(swap).observe(g,{childList:true,subtree:true});
+    var t0=performance.now();
+    (function loop(now){
+      var cs=document.querySelectorAll("canvas.icon-anim");
+      if(ready&&cs.length){
+        gl.uniform1f(uT,(now-t0)/1000); gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+        for(var i=0;i<cs.length;i++){
+          var r=cs[i].getBoundingClientRect(); if(r.bottom<0||r.top>innerHeight) continue;
+          var ctx=cs[i].getContext("2d"); ctx.imageSmoothingQuality="high";
+          ctx.drawImage(off,0,0,cs[i].width,cs[i].height);
+        }
+      }
       requestAnimationFrame(loop);
     })(t0);
   }catch(err){}
