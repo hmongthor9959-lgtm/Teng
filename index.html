@@ -990,24 +990,15 @@ render();
         "  float wm=smoothstep(.10,.22,c0.b-c0.r)*smoothstep(-.02,.06,c0.b-c0.g+.02)*smoothstep(560.,620.,q.y)*smoothstep(380.,440.,q.x)*(1.-smoothstep(900.,980.,q.x));",
         "  float fm=smoothstep(.05,.14,c0.g-c0.r)*smoothstep(.01,.08,c0.g-c0.b)*(1.-wm);",
         "  vec2 bk=floor(q/14.); float hp=dot(bk,vec2(12.9898,78.233));",
-        "  float lp=t*1.1+q.x*.006+q.y*.004;",
-        "  vec2 dl=vec2(sin(lp)*1.6+sin(t*2.7+hp)*.8,cos(t*1.9+hp*1.3)*.5)*fm*amp;",
+        "  float tb=smoothstep(1860.,1880.,q.x)*(1.-smoothstep(445.,462.,q.y))*smoothstep(195.,215.,q.y);",
+        "  fm=max(fm,tb*smoothstep(-.07,-.01,c0.g-c0.r)*smoothstep(.03,.08,c0.g-c0.b));",
+        "  float sb=smoothstep(1860.,1872.,q.x)*(1.-smoothstep(1965.,1980.,q.x))*smoothstep(382.,392.,q.y)*(1.-smoothstep(448.,458.,q.y));",
+        "  fm=max(fm,sb);",
+        "  float lp=t*1.5+q.x*.006+q.y*.004;",
+        "  float gust=.75+.25*sin(t*.6+q.x*.003);",
+        "  vec2 dl=vec2(sin(lp)*4.8+sin(t*3.0+hp)*2.4,cos(t*2.2+hp*1.3)*1.8+sin(lp*1.3)*1.0)*gust*fm*amp;",
         "  vec4 col=texture2D(tex,clamp((q+dl)/img,0.,1.));",
 
-      ].join("\n");
-      // long hair hanging down the woman's left cheek (blocky, sways a little)
-      var HAIRG=[
-        "  {",
-        "    vec2 hv=vec2(-.371,.929), hu=vec2(.929,.371);",
-        "    vec2 hd=q-vec2(1429.,370.);",
-        "    float ha=dot(hd,hv);",
-        "    float hb=-dot(hd,hu)-sin(t*1.1+.6)*1.3*clamp(ha/64.,0.,1.);",
-        "    float qa=floor(ha/5.), qb=floor(hb/5.);",
-        "    float nb=qa<5.?3.:(qa<9.?2.:1.);",
-        "    float hin=step(0.,ha)*step(qa,12.)*step(0.,hb)*step(qb,nb-1.);",
-        "    float sh=.8+.35*fract(sin(dot(vec2(qa,qb),vec2(12.9,78.2)))*43758.5);",
-        "    col.rgb=mix(col.rgb,vec3(.2,.115,.08)*sh,hin);",
-        "  }",
       ].join("\n");
       var VS="attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}";
       var FS=[
@@ -1054,7 +1045,6 @@ render();
         "    float ln=mk*smoothstep(.85,1.,lid)*(1.-smoothstep(.025,.075,abs(y01-yl)))*(1.-smoothstep(.8,.97,e.x));",
         "    col.rgb=mix(col.rgb,vec3(.26,.13,.08),ln*.85);",
         "  }",
-        (cfg.pan ? HAIRG : ""),
         "  gl_FragColor=col;",
         "}"
       ].join("\n");
