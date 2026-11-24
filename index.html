@@ -198,6 +198,9 @@ footer strong{color:var(--fg);font-weight:600}
 .hs-mask{position:absolute;inset:0;opacity:var(--n);background:radial-gradient(circle calc(var(--sunr,150px)*1.5) at var(--sunx,30%) var(--suny,30%),rgba(10,18,50,.96) 0,rgba(10,18,50,.85) 40%,rgba(10,18,50,.4) 72%,rgba(10,18,50,0) 100%)}
 .hs-st{position:absolute;left:calc(var(--ox,0px) + var(--sx)*var(--ls,1)*1px);top:calc(var(--oy,0px) + var(--sy)*var(--ls,1)*1px);width:calc(var(--ls,1)*var(--sz,6)*1px);height:calc(var(--ls,1)*var(--sz,5)*1px);background:#fff;opacity:calc(var(--n)*.95);animation:twinkle 2.6s ease-in-out infinite;box-shadow:0 0 4px rgba(190,210,255,.8)}
 .hs-st.big{--sz:10}
+.hs-orb{position:absolute;z-index:1;left:calc(var(--ox,0px) + var(--px,0)*var(--ls,1)*1px);top:calc(var(--oy,0px) + var(--py,0)*var(--ls,1)*1px);transform:translate(-50%,-50%);pointer-events:none;opacity:0;transition:opacity .5s linear}
+.hs-sun{width:calc(var(--ls,1)*92px);height:calc(var(--ls,1)*92px);background:#fffbd6;box-shadow:inset 0 0 0 calc(var(--ls,1)*10px) #ffe45c,0 0 calc(var(--ls,1)*70px) calc(var(--ls,1)*30px) rgba(255,205,90,.75),0 0 calc(var(--ls,1)*180px) calc(var(--ls,1)*70px) rgba(255,160,60,.35)}
+.hs-moon{width:calc(var(--ls,1)*74px);height:calc(var(--ls,1)*74px);background:linear-gradient(#c9d2e4,#c9d2e4) 22% 26%/20% 20% no-repeat,linear-gradient(#c9d2e4,#c9d2e4) 60% 58%/26% 22% no-repeat,linear-gradient(#c9d2e4,#c9d2e4) 30% 70%/14% 14% no-repeat,#eef2fb;box-shadow:inset calc(var(--ls,1)*-9px) calc(var(--ls,1)*-9px) 0 #b7c2d8,0 0 calc(var(--ls,1)*50px) calc(var(--ls,1)*18px) rgba(190,208,255,.6)}
 .hs-lamp{position:absolute;z-index:1;left:var(--lx,-999px);top:var(--ly,-999px);width:0;height:0;pointer-events:none}
 .hs-lamp::before,.hs-lamp::after{content:"";position:absolute;pointer-events:none;mix-blend-mode:screen}
 .hs-lamp::before{width:calc(var(--lr,200px)*2);height:calc(var(--lr,200px)*2);left:calc(var(--lr,200px)*-1);top:calc(var(--lr,200px)*-1);border-radius:50%;background:radial-gradient(circle,rgba(255,236,150,.5) 0,rgba(255,200,85,.46) 12%,rgba(255,150,45,.3) 34%,rgba(255,120,30,.12) 58%,rgba(255,120,30,0) 72%);opacity:calc(var(--n,0)*1);animation:lampflick 3.4s ease-in-out infinite}
@@ -886,6 +889,20 @@ render();
     }
     function arc(p){ return {x:4+92*p, y:34-30*Math.sin(Math.PI*p), o:clamp(Math.sin(Math.PI*p)*4)}; }
     function pad(n){ return (n<10?"0":"")+n; }
+    // sun (day) and moon (night) follow the hand-drawn arc over the hero picture: rise on the left, peak in the middle, set on the right
+    var ARC=[[240,265],[500,180],[750,118],[1000,92],[1250,92],[1500,140],[1650,200],[1790,265],[1865,355]].map(function(a){ return [a[0]*1.088,a[1]*1.088]; });
+    function arcAt(p){
+      var n=ARC.length-1, f=Math.min(.9999,Math.max(0,p))*n, i=Math.floor(f), u=f-i;
+      var a=ARC[Math.max(0,i-1)], b=ARC[i], c=ARC[i+1], d=ARC[Math.min(n,i+2)];
+      function cr(k){ return .5*((2*b[k])+(-a[k]+c[k])*u+(2*a[k]-5*b[k]+4*c[k]-d[k])*u*u+(-a[k]+3*b[k]-3*c[k]+d[k])*u*u*u); }
+      return [cr(0),cr(1)];
+    }
+    function sst(a,b,x){ x=clamp((x-a)/(b-a)); return x*x*(3-2*x); }
+    function orb(el,p,on){
+      if(!el) return;
+      var a=arcAt(p); el.style.setProperty("--px",a[0].toFixed(1)); el.style.setProperty("--py",a[1].toFixed(1));
+      el.style.opacity = on ? (sst(0,.07,p)*(1-sst(.86,.97,p))).toFixed(3) : "0";
+    }
     function update(){
       var t=now(), n=nightness(t), w=warmth(t);
       var sp = t<12000 ? arc(t/12000) : {x:50,y:40,o:0};
@@ -894,6 +911,7 @@ render();
       s.setProperty("--n",n.toFixed(3)); s.setProperty("--w",w.toFixed(3));
       s.setProperty("--sx",sp.x.toFixed(2)); s.setProperty("--sy",sp.y.toFixed(1)+"px"); s.setProperty("--so",sp.o.toFixed(2));
       s.setProperty("--mx",mp.x.toFixed(2)); s.setProperty("--my",mp.y.toFixed(1)+"px"); s.setProperty("--mo",mp.o.toFixed(2));
+
     }
     // hero: night sky layer (moon, cover over the photo's sun) on top of the picture
     var HW=2176, HH=1152, SUNX=1830, SUNY=330, LAMPX=956, LAMPY=640;   // size of the hero photo and where its sun sits (px in the photo)
@@ -910,6 +928,8 @@ render();
       sky.innerHTML=h; hf.insertBefore(sky,hf.firstChild);
       var hue=document.createElement("div"); hue.className="hs-hue"; hue.setAttribute("aria-hidden","true"); hf.insertBefore(hue,sky);   // turns the orange sunset sky into blue night
       var lamp=document.createElement("div"); lamp.className="hs-lamp"; lamp.setAttribute("aria-hidden","true"); hf.appendChild(lamp);
+      var hsSun=document.createElement("i"); hsSun.className="hs-orb hs-sun"; hsSun.setAttribute("aria-hidden","true"); hf.appendChild(hsSun);
+      var hsMoon=document.createElement("i"); hsMoon.className="hs-orb hs-moon"; hsMoon.setAttribute("aria-hidden","true"); hf.appendChild(hsMoon);
       var zz=document.createElement("div"); zz.className="hs-zz"; zz.setAttribute("aria-hidden","true");
       var zh=""; [[1385,300,-1,-40],[1700,255,1,40]].forEach(function(o){ for(var i=0;i<3;i++){ zh+='<i class="hs-z" style="--zx:'+(o[0]+o[2]*i*14)+';--zy:'+(o[1]-i*10)+';--zs:'+(34+i*8)+';--zdx:'+o[3]+';--zd:'+(i*1.4)+'s">z</i>'; } });
       zz.innerHTML=zh; hf.appendChild(zz);
@@ -924,6 +944,12 @@ render();
       if(window.ResizeObserver) new ResizeObserver(place).observe(hf); else window.addEventListener("resize",place);
     }
     update(); setInterval(update,500);
+    // sun + moon are placed in picture coordinates (like the stars and the z's), moved every frame so they stay glued to the picture when it is dragged
+    (function orbLoop(){
+      var t=now();
+      if(hsSun){ if(t<12000) orb(hsSun,t/12000,true); else orb(hsSun,1,false); if(t>=12000) orb(hsMoon,(t-12000)/12000,true); else orb(hsMoon,0,false); }
+      requestAnimationFrame(orbLoop);
+    })();
     // cards are re-rendered when the list changes; fill any new ones straight away
     var g=document.getElementById("grid");
     if(g&&window.MutationObserver) new MutationObserver(update).observe(g,{childList:true});
@@ -937,9 +963,9 @@ render();
     var CFG=[
       {sel:".hero-frame", css:"--hero-scene", w:2176, h:1152, fx:.78, fy:.5, pan:true,
        C:[
-      [1370,520,230,300, 1340,760, .036,1.05, 0.0,1.6],  // woman (soft, slow breathing + gentle rise/fall)
       [1640,540,250,340, 1610,800, .030,1.20, 2.2,0],  // man
-      [1990,590,120,120, 1985,730, .040,1.70, 1.1,0]   // dog
+      [1990,590,120,120, 1985,730, .040,1.70, 1.1,0],   // dog
+      [1440,548,62,52, 1440,548, .034,1.05, 0.0,0]   // woman: breathes in the chest only (head, arms and the rest stay still)
     ],
        E:[
       [1456,399.5,18.5,16, 229,156,87, 4.4, 0.5,.22,1, .307],   // wL (rotated with the tilted head)
@@ -1014,6 +1040,7 @@ render();
         "    vec4 a=U0[i],b=U1[i],c=U2[i];",
         "    vec2 d=(p-a.xy)/a.zw;",
         "    float w=1.-smoothstep(0.,1.,length(d));",
+        (cfg.pan ? "    if(i==0) w*=mix(1.,smoothstep(1500.,1600.,p.x),1.-smoothstep(480.,520.,p.y));" : ""),
         "    float ph=t*b.w+c.x;",
         "    float k=b.z*amp*(sin(ph)+.25*sin(2.*ph+1.));",
         "    q-=(p-b.xy)*vec2(k*.35,k)*w;",
