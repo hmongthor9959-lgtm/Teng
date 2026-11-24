@@ -196,8 +196,8 @@ footer strong{color:var(--fg);font-weight:600}
 .hero-sky::before{content:"";position:absolute;inset:0;background:linear-gradient(to bottom,rgba(3,8,30,calc(.78*var(--n))) 0,rgba(5,11,38,calc(.7*var(--n))) 45%,rgba(6,14,36,calc(.6*var(--n))) 100%)}
 .hero-sky::after{content:"";position:absolute;inset:0;background:linear-gradient(to top,rgba(255,110,25,.42),rgba(255,70,90,.14) 60%,rgba(255,70,90,0));opacity:calc(var(--w)*(1 - var(--n,0)));transition:opacity .6s linear}
 .hs-mask{position:absolute;inset:0;opacity:var(--n);background:radial-gradient(circle calc(var(--sunr,150px)*1.5) at var(--sunx,30%) var(--suny,30%),rgba(10,18,50,.96) 0,rgba(10,18,50,.85) 40%,rgba(10,18,50,.4) 72%,rgba(10,18,50,0) 100%)}
-.hs-st{position:absolute;width:3px;height:3px;background:#fff;opacity:calc(var(--n)*.95);animation:twinkle 2.6s ease-in-out infinite;box-shadow:0 0 4px rgba(190,210,255,.8)}
-.hs-st.big{width:4px;height:4px}
+.hs-st{position:absolute;left:calc(var(--ox,0px) + var(--sx)*var(--ls,1)*1px);top:calc(var(--oy,0px) + var(--sy)*var(--ls,1)*1px);width:calc(var(--ls,1)*var(--sz,6)*1px);height:calc(var(--ls,1)*var(--sz,5)*1px);background:#fff;opacity:calc(var(--n)*.95);animation:twinkle 2.6s ease-in-out infinite;box-shadow:0 0 4px rgba(190,210,255,.8)}
+.hs-st.big{--sz:10}
 .hs-lamp{position:absolute;z-index:1;left:var(--lx,-999px);top:var(--ly,-999px);width:0;height:0;pointer-events:none}
 .hs-lamp::before,.hs-lamp::after{content:"";position:absolute;pointer-events:none;mix-blend-mode:screen}
 .hs-lamp::before{width:calc(var(--lr,200px)*2);height:calc(var(--lr,200px)*2);left:calc(var(--lr,200px)*-1);top:calc(var(--lr,200px)*-1);border-radius:50%;background:radial-gradient(circle,rgba(255,236,150,.5) 0,rgba(255,200,85,.46) 12%,rgba(255,150,45,.3) 34%,rgba(255,120,30,.12) 58%,rgba(255,120,30,0) 72%);opacity:calc(var(--n,0)*1);animation:lampflick 3.4s ease-in-out infinite}
@@ -900,11 +900,12 @@ render();
     var hf=document.querySelector(".hero-frame");
     if(hf){
       var sky=document.createElement("div"); sky.className="hero-sky"; sky.setAttribute("aria-hidden","true");
-      var h='<div class="hs-mask"></div>';
+      var h='';
       var sd=11, sr=function(){ sd=(sd*9301+49297)%233280; return sd/233280; };
-      for(var si=0;si<70;si++){   // little stars in the sky above the mountains
-        var sxn=sr()*100, syn=1+sr()*(si<48?24:34), big=sr()<.18; if(sxn>55&&sxn<90&&syn>9) sxn=sxn<72?sxn-28:sxn+16; var sx=sxn.toFixed(1), sy=syn.toFixed(1);
-        h+='<i class="hs-st'+(big?' big':'')+'" style="left:'+sx+'%;top:'+sy+'%;animation-delay:-'+(sr()*2.6).toFixed(2)+'s;animation-duration:'+(2+sr()*2.4).toFixed(2)+'s"></i>';
+      for(var si=0;si<70;si++){   // little stars, placed in picture coordinates so they stay still on the picture
+        var sxn=sr()*HW, syn=12+sr()*(si<48?200:250), big=sr()<.18;
+        if(sxn>1250&&sxn<1800&&syn>90) syn=12+sr()*70;
+        h+='<i class="hs-st'+(big?' big':'')+'" style="--sx:'+sxn.toFixed(0)+';--sy:'+syn.toFixed(0)+';animation-delay:-'+(sr()*2.6).toFixed(2)+'s;animation-duration:'+(2+sr()*2.4).toFixed(2)+'s"></i>';
       }
       sky.innerHTML=h; hf.insertBefore(sky,hf.firstChild);
       var hue=document.createElement("div"); hue.className="hs-hue"; hue.setAttribute("aria-hidden","true"); hf.insertBefore(hue,sky);   // turns the orange sunset sky into blue night
@@ -941,8 +942,8 @@ render();
       [1990,590,120,120, 1985,730, .040,1.70, 1.1,0]   // dog
     ],
        E:[
-      [1455,399,15,14.5, 229,156,87, 4.4, 0.5,.22,1, .31],   // wL (rotated with the tilted head)
-      [1507.5,431,16,15.5, 224,154,88, 4.4, 0.5,.22,1, .33],   // wR
+      [1455,398.5,16.5,13.5, 229,156,87, 4.4, 0.5,.22,1, .307],   // wL (rotated with the tilted head)
+      [1509.5,430,17,15, 224,154,88, 4.4, 0.5,.22,1, .31],   // wR
       [1613,373,8,10, 237,159,79, 5.0, 2.3,.22,1],   // mL
       [1650,364,9,11, 241,164,81, 5.0, 2.3,.22,1],   // mR
       [1913,536,9,11, 219,204,196, 5.6, 1.7,.22,0],   // dL
@@ -1017,14 +1018,16 @@ render();
         "    vec2 d=q-a.xy; float cr=cos(c.w),sr=sin(c.w);",
         "    vec2 r=vec2(cr*d.x+sr*d.y,cr*d.y-sr*d.x);",
         "    vec2 e=abs(r)/a.zw;",
-        "    float mk=1.-smoothstep(.8,1.1,max(e.x,e.y));",
+        "    float mk=1.-smoothstep(1.,1.22,max(e.x,e.y));",
         "    float y01=(r.y+a.w)/(2.*a.w);",
         "    float edge=lid*1.15;",
         "    float lc=1.-smoothstep(edge-.14,edge,y01);",
-        "    col.rgb=mix(col.rgb,b.xyz,mk*lc);",
+        "    vec3 skin=b.xyz; if(c.z>.5){ vec2 o=vec2(-sr,cr)*a.w*1.9; skin=texture2D(tex,clamp((q+o)/img,0.,1.)).rgb; }",
+        "    col.rgb=mix(col.rgb,skin,mk*lc);",
         "    col.rgb*=1.-.14*mk*lc*smoothstep(.55,1.,y01/max(edge,.01));",
-        "    float ln=mk*smoothstep(.8,1.,lid)*(1.-smoothstep(.04,.11,abs(y01-.68)))*(1.-smoothstep(.7,.95,e.x));",
-        "    col.rgb=mix(col.rgb,b.xyz*.4,ln*.65);",
+        "    float yl=.6+.15*(1.-e.x*e.x);",
+        "    float ln=mk*smoothstep(.85,1.,lid)*(1.-smoothstep(.025,.075,abs(y01-yl)))*(1.-smoothstep(.8,.97,e.x));",
+        "    col.rgb=mix(col.rgb,vec3(.26,.13,.08),ln*.85);",
         "  }",
         "  gl_FragColor=col;",
         "}"
