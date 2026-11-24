@@ -934,10 +934,10 @@ render();
       [1990,590,120,120, 1985,730, .040,1.70, 1.1,0]   // dog
     ],
        E:[
-      [1457,397,18,17, 229,156,87, 4.4, 0.5,.22,1, 0.50],   // wL
-      [1508,425,18,17, 224,154,88, 4.4, 0.5,.22,1, 0.50],   // wR
-      [1613,373,10,12, 237,159,79, 5.0, 2.3,.22,1, -0.24],   // mL
-      [1650,364,11,13, 241,164,81, 5.0, 2.3,.22,1, -0.24],   // mR
+      [1455.5,398,19,12.5, 229,156,87, 4.4, 0.5,.22,1, 0.50, 26,15],   // wL
+      [1507,430,19,14.5, 224,154,88, 4.4, 0.5,.22,1, 0.50, -25,-16],   // wR
+      [1614,373.5,10.5,10.5, 237,159,79, 5.0, 2.3,.22,1, -0.24, 18,0],   // mL
+      [1650.5,364.5,11.5,11.5, 241,164,81, 5.0, 2.3,.22,1, -0.24, -18,5],   // mR
       [1913,536,9,11, 219,204,196, 5.6, 1.7,.22,0],   // dL
       [1959,538,11,12, 220,202,198, 5.6, 1.7,.22,0],   // dR
     ]},
@@ -974,13 +974,13 @@ render();
       var C=cfg.C,E=cfg.E,N=C.length,M=E.length;
       var u0=new Float32Array(N*4),u1=new Float32Array(N*4),u2=new Float32Array(N*4);
       C.forEach(function(c,i){u0.set([c[0],c[1],c[2],c[3]],i*4);u1.set([c[4],c[5],c[6],c[7]],i*4);u2.set([c[8],c[9],0,0],i*4);});
-      var e0=new Float32Array(M*4),e1=new Float32Array(M*4),e2=new Float32Array(M*4);
-      E.forEach(function(c,i){e0.set([c[0],c[1],c[2],c[3]],i*4);e1.set([c[4]/255,c[5]/255,c[6]/255,c[7]],i*4);e2.set([c[8],c[9],c[10]||0,c[11]||0],i*4);});
+      var e0=new Float32Array(M*4),e1=new Float32Array(M*4),e2=new Float32Array(M*4),e3=new Float32Array(M*4);
+      E.forEach(function(c,i){e0.set([c[0],c[1],c[2],c[3]],i*4);e1.set([c[4]/255,c[5]/255,c[6]/255,c[7]],i*4);e2.set([c[8],c[9],c[10]||0,c[11]||0],i*4);e3.set([c[12]||0,c[13]||0,0,0],i*4);});
       var VS="attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}";
       var FS=[
         "precision highp float;",
         "uniform sampler2D tex;uniform vec2 res,img,focus;uniform float t,amp,sl;",
-        "uniform vec4 U0["+N+"],U1["+N+"],U2["+N+"],E0["+M+"],E1["+M+"],E2["+M+"];",
+        "uniform vec4 U0["+N+"],U1["+N+"],U2["+N+"],E0["+M+"],E1["+M+"],E2["+M+"],E3["+M+"];",
         "void main(){",
         "  float s=max(res.x/img.x,res.y/img.y);",
         "  vec2 off=(res-img*s)*focus;",
@@ -997,7 +997,7 @@ render();
         "  }",
         "  vec4 col=texture2D(tex,clamp(q/img,0.,1.));",
         "  for(int j=0;j<"+M+";j++){",
-        "    vec4 a=E0[j],b=E1[j],c=E2[j];",
+        "    vec4 a=E0[j],b=E1[j],c=E2[j],g=E3[j];",
         "    float ph=mod(t+c.x,b.w);",
         "    float x=ph/c.y; float cl=0.;",
         "    if(x<1.){ cl = x<.35 ? smoothstep(0.,.35,x) : 1.-smoothstep(.35,1.,x); }",   // eyelid drops quickly, rises a little slower
@@ -1009,10 +1009,10 @@ render();
         "    vec2 dd=q-a.xy; vec2 dr=vec2(cs*dd.x+sn*dd.y,-sn*dd.x+cs*dd.y);",
         "    vec2 e=abs(dr)/a.zw;",
         "    float v=dr.y/a.w;",
-        "    vec3 fill=mix(b.xyz,texture2D(tex,clamp((q+vec2(-sn,cs)*a.w*2.)/img,0.,1.)).rgb,c.z);",   // closed lid = the real skin just below the eye
+        "    vec3 fill=mix(b.xyz,texture2D(tex,clamp((a.xy+g.xy)/img,0.,1.)).rgb,c.z);",   // closed lid = the real skin just below the eye
         "    float L=-1.2+2.4*lid;",
-        "    float cover=1.-smoothstep(L-.15,L+.15,v);",                                // lid sweeps down from the top of the eye
-        "    float mk=1.-smoothstep(.8,1.1,max(e.x,e.y));",
+        "    float cover=1.-smoothstep(L-.12,L+.12,v);",                                // lid sweeps down from the top of the eye
+        "    float mk=1.-smoothstep(mix(.8,1.,c.z),mix(1.1,1.2,c.z),max(e.x,e.y));",
         "    float edge=smoothstep(.3,0.,abs(v-L))*step(.04,lid)*(1.-step(.97,lid));",
         "    col.rgb=mix(col.rgb,fill,mk*cover);",
         "    col.rgb=mix(col.rgb,fill*.72,mk*edge*.5);",
@@ -1043,7 +1043,7 @@ render();
           var U=function(n){return gl.getUniformLocation(pr,n);};
           gl.uniform1i(U("tex"),0); gl.uniform2f(U("img"),cfg.w,cfg.h); gl.uniform2f(U("focus"),cfg.fx,cfg.fy); gl.uniform1f(U("amp"),AMP);
           gl.uniform4fv(U("U0"),u0);gl.uniform4fv(U("U1"),u1);gl.uniform4fv(U("U2"),u2);
-          gl.uniform4fv(U("E0"),e0);gl.uniform4fv(U("E1"),e1);gl.uniform4fv(U("E2"),e2);
+          gl.uniform4fv(U("E0"),e0);gl.uniform4fv(U("E1"),e1);gl.uniform4fv(U("E2"),e2);gl.uniform4fv(U("E3"),e3);
           var uRes=U("res"),uT=U("t"),uF=U("focus"),uSl=U("sl");
           host.insertBefore(cv,host.firstChild);
           var sc={visible:true,fx:cfg.fx,tx:cfg.fx};
