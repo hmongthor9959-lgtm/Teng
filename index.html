@@ -934,10 +934,10 @@ render();
       [1990,590,120,120, 1985,730, .040,1.70, 1.1,0]   // dog
     ],
        E:[
-      [1457,397,16,15, 229,156,87, 4.4, 0.5,.22,1],   // wL
-      [1510,428,18,19, 224,154,88, 4.4, 0.5,.22,1],   // wR
-      [1613,373,8,10, 237,159,79, 5.0, 2.3,.22,1],   // mL
-      [1650,364,9,11, 241,164,81, 5.0, 2.3,.22,1],   // mR
+      [1457,397,18,17, 229,156,87, 4.4, 0.5,.22,1, 0.50],   // wL
+      [1508,425,18,17, 224,154,88, 4.4, 0.5,.22,1, 0.50],   // wR
+      [1613,373,10,12, 237,159,79, 5.0, 2.3,.22,1, -0.24],   // mL
+      [1650,364,11,13, 241,164,81, 5.0, 2.3,.22,1, -0.24],   // mR
       [1913,536,9,11, 219,204,196, 5.6, 1.7,.22,0],   // dL
       [1959,538,11,12, 220,202,198, 5.6, 1.7,.22,0],   // dR
     ]},
@@ -975,7 +975,7 @@ render();
       var u0=new Float32Array(N*4),u1=new Float32Array(N*4),u2=new Float32Array(N*4);
       C.forEach(function(c,i){u0.set([c[0],c[1],c[2],c[3]],i*4);u1.set([c[4],c[5],c[6],c[7]],i*4);u2.set([c[8],c[9],0,0],i*4);});
       var e0=new Float32Array(M*4),e1=new Float32Array(M*4),e2=new Float32Array(M*4);
-      E.forEach(function(c,i){e0.set([c[0],c[1],c[2],c[3]],i*4);e1.set([c[4]/255,c[5]/255,c[6]/255,c[7]],i*4);e2.set([c[8],c[9],c[10]||0,0],i*4);});
+      E.forEach(function(c,i){e0.set([c[0],c[1],c[2],c[3]],i*4);e1.set([c[4]/255,c[5]/255,c[6]/255,c[7]],i*4);e2.set([c[8],c[9],c[10]||0,c[11]||0],i*4);});
       var VS="attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}";
       var FS=[
         "precision highp float;",
@@ -1005,14 +1005,17 @@ render();
         "    float se=clamp(sl*1.25-dl,0.,1.); se=se*se*(3.-2.*se);",
         "    float wob=4.*se*(1.-se)*.13*amp*sin(t*2.3+c.x*4.)*c.z;",                   // drowsy lids wobble a little while falling asleep / waking
         "    float lid=clamp(max(cl,se*c.z+wob),0.,1.);",
-        "    vec2 e=abs(q-a.xy)/a.zw;",
-        "    float v=(q.y-a.y)/a.w;",
+        "    float cs=cos(c.w), sn=sin(c.w);",                                          // eyes follow the tilt of each head
+        "    vec2 dd=q-a.xy; vec2 dr=vec2(cs*dd.x+sn*dd.y,-sn*dd.x+cs*dd.y);",
+        "    vec2 e=abs(dr)/a.zw;",
+        "    float v=dr.y/a.w;",
+        "    vec3 fill=mix(b.xyz,texture2D(tex,clamp((q+vec2(-sn,cs)*a.w*2.)/img,0.,1.)).rgb,c.z);",   // closed lid = the real skin just below the eye
         "    float L=-1.2+2.4*lid;",
         "    float cover=1.-smoothstep(L-.15,L+.15,v);",                                // lid sweeps down from the top of the eye
         "    float mk=1.-smoothstep(.8,1.1,max(e.x,e.y));",
         "    float edge=smoothstep(.3,0.,abs(v-L))*step(.04,lid)*(1.-step(.97,lid));",
-        "    col.rgb=mix(col.rgb,b.xyz,mk*cover);",
-        "    col.rgb=mix(col.rgb,b.xyz*.7,mk*edge*.5);",
+        "    col.rgb=mix(col.rgb,fill,mk*cover);",
+        "    col.rgb=mix(col.rgb,fill*.72,mk*edge*.5);",
         "  }",
         "  gl_FragColor=col;",
         "}"
