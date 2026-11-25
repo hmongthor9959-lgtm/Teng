@@ -348,7 +348,12 @@ const DEFAULT_CATS = ["ม็อบ", "อาวุธ", "ตกแต่ง", "
 let state = [];
 try { state = JSON.parse(el("addon-data").textContent) || []; } catch (e) { state = []; }
 let cat = ALL, query = "", canEdit = false, editingId = null, busy = false, lastFocus = null, dirty = false;
-const DRAFT = "addon-library-draft", ADMIN = "addon-library-admin";
+const DRAFT = "addon-library-draft", ADMIN = "addon-library-admin", TOKEN_KEY = "addon-library-gh-token";
+/* shared list lives in addons.json in the same GitHub repo; owner/repo are read from the page address (owner.github.io/repo/) */
+const GH_FILE = "addons.json";
+const GH_OWNER = location.hostname.endsWith(".github.io") ? location.hostname.split(".")[0] : "";
+const GH_REPO = location.hostname.endsWith(".github.io") ? (location.pathname.split("/")[1] || location.hostname) : "";
+const GH_API = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`;
 
 /* ---------- helpers ---------- */
 function esc(t){ return String(t == null ? "" : t).replace(/[&<>"]/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m])); }
@@ -402,12 +407,72 @@ function errText(e){
   if (c === "not_writer" || c === "not_granted" || c === "not_declared" || c === "consent_required") return "บัญชีนี้แก้ไขหน้านี้ไม่ได้";
   if (c === "too_large") return "ข้อมูลใหญ่เกินไป ลองลบแอดออนเก่าบางอัน";
   if (c === "rate_limited") return "บันทึกถี่เกินไป รอสักครู่แล้วลองใหม่";
+  if (c === "no_token") return "ยังไม่ได้ใส่ GitHub token";
+  if (c === "auth") return "GitHub token ใช้ไม่ได้หรือหมดอายุ เปิดหน้าเว็บด้วย #logout แล้วเข้า #admin ใหม่เพื่อใส่ token ใหม่";
+  if (c === "no_repo") return "เว็บนี้ไม่ได้เปิดจาก github.io จึงบันทึกขึ้นเว็บอัตโนมัติไม่ได้";
   return "บันทึกไม่สำเร็จ ลองใหม่อีกครั้ง";
 }
+function getToken(){ try { return localStorage.getItem(TOKEN_KEY) || ""; } catch (e) { return ""; } }
+function askToken(){
+  const v = (window.prompt("วาง GitHub token ของเว็บนี้ (ใส่ครั้งเดียว เก็บไว้ในเครื่องนี้เท่านั้น)") || "").trim();
+  if (v) { try { localStorage.setItem(TOKEN_KEY, v); } catch (e) {} }
+  return v;
+}
+function b64enc(s){ return btoa(unescape(encodeURIComponent(s))); }
+function b64dec(s){ return decodeURIComponent(escape(atob(s.replace(/\s/g, "")))); }
+function ghHeaders(tok){ return { Authorization: "Bearer " + tok, Accept: "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28" }; }
+/* read the shared file as admin (fresh, with sha). returns {list, sha} or null if the file does not exist yet */
+async function ghGet(tok){
+  if (!GH_OWNER) throw { code: "no_repo" };
+  let r;
+  try { r = await fetch(GH_API + "?t=" + Date.now(), { headers: ghHeaders(tok), cache: "no-store" }); }
+  catch (e) { throw { code: "net" }; }
+  if (r.status === 404) return null;
+  if (r.status === 401 || r.status === 403) throw { code: "auth" };
+  if (!r.ok) throw { code: "net" };
+  const j = await r.json();
+  let list = [];
+  try { list = JSON.parse(b64dec(j.content || "")); } catch (e) { list = []; }
+  return { list: Array.isArray(list) ? list : [], sha: j.sha };
+}
+async function ghPut(tok, list){
+  const cur = await ghGet(tok);
+  const body = { message: "update add-on list", content: b64enc(JSON.stringify(list, null, 1)) };
+  if (cur && cur.sha) body.sha = cur.sha;
+  let r;
+  try { r = await fetch(GH_API, { method: "PUT", headers: Object.assign({ "Content-Type": "application/json" }, ghHeaders(tok)), body: JSON.stringify(body) }); }
+  catch (e) { throw { code: "net" }; }
+  if (r.status === 401 || r.status === 403) throw { code: "auth" };
+  if (r.status === 409 || r.status === 422) throw { code: "conflict" };
+  if (!r.ok) throw { code: "net" };
+}
+async function pushList(next){
+  let tok = getToken() || askToken();
+  if (!tok) throw { code: "no_token" };
+  try { await ghPut(tok, next); }
+  catch (e) { if (e && e.code === "auth") { try { localStorage.removeItem(TOKEN_KEY); } catch (_) {} } throw e; }
+}
 async function commit(next){
-  state = next; dirty = true;
-  try { localStorage.setItem(DRAFT, JSON.stringify(next)); } catch (e) {}
+  await pushList(next);
+  state = next; dirty = false;
+  try { localStorage.removeItem(DRAFT); } catch (e) {}
   render();
+}
+async function syncDraft(){
+  if (busy) return;
+  busy = true;
+  try { await commit(state); toast("บันทึกขึ้นเว็บแล้ว ทุกคนจะเห็นภายใน 1-2 นาที"); }
+  catch (e) { toast(errText(e)); }
+  busy = false; render();
+}
+/* visitors: read the shared list (query string changes every 30s so the CDN cache is skipped) */
+async function loadShared(){
+  try {
+    const r = await fetch(GH_FILE + "?v=" + Math.floor(Date.now() / 30000), { cache: "no-store" });
+    if (!r.ok) return null;
+    const j = await r.json();
+    return Array.isArray(j) ? j : null;
+  } catch (e) { return null; }
 }
 function exportFile(){
   const blob = new Blob([buildDoc(state)], { type: "text/html" });
@@ -510,7 +575,7 @@ function render(){
   el("fab").hidden = !canEdit;
   el("bulkBtn").hidden = !canEdit;
   el("exportBtn").hidden = !canEdit;
-  el("exportBtn").textContent = dirty ? "ส่งออกไฟล์ (มีการแก้ไขที่ยังไม่ได้ส่งออก)" : "ส่งออกไฟล์ index.html";
+  el("exportBtn").textContent = dirty ? "บันทึกขึ้นเว็บ (มีรายการที่ยังไม่ได้ขึ้นเว็บ)" : "ส่งออกไฟล์ index.html (สำรอง)";
 }
 
 /* ---------- form ---------- */
@@ -602,7 +667,7 @@ el("chips").addEventListener("click", e => {
 });
 el("q").addEventListener("input", e => { query = e.target.value; render(); });
 el("fab").addEventListener("click", () => openForm(null));
-el("exportBtn").addEventListener("click", exportFile);
+el("exportBtn").addEventListener("click", () => { if (dirty) syncDraft(); else exportFile(); });
 el("f-cancel").addEventListener("click", closeForm);
 el("form").addEventListener("submit", submitForm);
 el("modal").addEventListener("click", e => { if (e.target === el("modal")) closeForm(); });
@@ -629,16 +694,37 @@ el("grid").addEventListener("click", async e => {
 });
 
 /* ---------- start: everyone sees the list; open the page with #admin to get the + button ---------- */
+let draftList = null;
 try {
   if (location.hash === "#admin") localStorage.setItem(ADMIN, "1");
-  if (location.hash === "#logout") localStorage.removeItem(ADMIN);
+  if (location.hash === "#logout") { localStorage.removeItem(ADMIN); localStorage.removeItem(TOKEN_KEY); }
   canEdit = localStorage.getItem(ADMIN) === "1" && location.hash !== "#logout";
   if (canEdit) {
     const d = JSON.parse(localStorage.getItem(DRAFT) || "null");
-    if (Array.isArray(d)) { state = d; dirty = true; }
+    if (Array.isArray(d)) draftList = d;
   }
 } catch (e) {}
 render();
+(async function(){
+  if (!canEdit) {
+    const shared = await loadShared();
+    if (shared) { state = shared; render(); }
+    return;
+  }
+  /* admin: read the shared file with the token; if it does not exist yet, upload what this browser already has */
+  const tok = getToken() || askToken();
+  if (!tok) { toast("ยังไม่ได้ใส่ GitHub token จึงบันทึกขึ้นเว็บไม่ได้"); return; }
+  try {
+    const cur = await ghGet(tok);
+    if (cur) { state = cur.list; dirty = false; try { localStorage.removeItem(DRAFT); } catch (e) {} }
+    else if (draftList) { state = draftList; dirty = true; toast("มีรายการที่ยังไม่ได้ขึ้นเว็บ กดปุ่มบันทึกขึ้นเว็บด้านล่าง"); }
+    render();
+  } catch (e) {
+    if (e && e.code === "auth") { try { localStorage.removeItem(TOKEN_KEY); } catch (_) {} }
+    if (draftList) { state = draftList; dirty = true; render(); }
+    toast(errText(e));
+  }
+})();
 
 /* ---------- tap the foxes: they run away crying, then come back ---------- */
 (function(){
